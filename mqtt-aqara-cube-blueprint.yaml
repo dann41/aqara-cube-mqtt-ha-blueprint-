@@ -395,7 +395,7 @@ action:
         sequence: !input "rotate_right"
       # ---------------------------- Rotate Left ----------------------------
       - conditions:
-          - "{{ command ==  'rotate_left' }}"
+          - "{{ command == 'rotate_left' }}"
         sequence: !input "rotate_left"
       # ---------------------------- Wake ----------------------------
       - conditions:
@@ -403,11 +403,11 @@ action:
         sequence: !input "cube_wake"
       # ---------------------------- Shake ----------------------------
       - conditions:
-          - "{{ value == 'shake' }}"
+          - "{{ command == 'shake' }}"
         sequence: !input "cube_shake"
       # ---------------------------- Drop ----------------------------
       - conditions:
-          - "{{ value == 'fall' }}"
+          - "{{ command == 'fall' }}"
         sequence: !input "cube_drop"
       # ---------------------------- Knock any side ----------------------------
       - conditions:
