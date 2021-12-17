@@ -5,8 +5,8 @@ blueprint:
 
   input:
     remote:
-      name: Magic Cube
-      description: Select the Aqara Magic Cube device
+      name: Magic Cube MQTT Topic
+      description: Select the topic used by your Aqara Magic Cube device
       selector:
         text:
 #        device:
@@ -358,34 +358,28 @@ trigger:
     topic: !input "remote"
 action:
   - variables:
-      command: "{{ trigger.payload.action }}"
-      value: "{{ trigger.payload.side }}"
+      command: "{{ trigger.payload_json.action }}"
+      value: "{{ trigger.payload_json.side }}"
       flip_degrees: >
         {% if command == "flip90" %} 90
         {% elif command == "flip180" %} 180
         {% endif %}
-      relative_degrees: "{{ trigger.payload.angle }}"
+      relative_degrees: "{{ trigger.payload_json.angle }}"
       flip_90: !input "flip_90"
       flip_180: !input "flip_180"
       slide_any_side: !input "slide_any_side"
       knock_any_side: !input "knock_any_side"
-      flip90: 64
-      flip180: 128
-      slide: 256
-      knock: 512
-      shake: 0
-      drop: 3
-      activated_face: "{{ trigger.payload.from_side }}"
+      activated_face: "{{ trigger.payload_json.side }}"
       from_face: >
         {% if command == "flip90" %}
-          {{ trigger.payload.from_side }}
+          {{ trigger.payload_json.from_side }}
         {% elif command == "flip180" %}
-          {% if trigger.payload.side == 0 %} 3
-          {% elif trigger.payload.side == 1 %} 4
-          {% elif trigger.payload.side == 2 %} 5
-          {% elif trigger.payload.side == 3 %} 0
-          {% elif trigger.payload.side == 4 %} 1
-          {% elif trigger.payload.side == 5 %} 2
+          {% if trigger.payload_json.side == 0 %} 3
+          {% elif trigger.payload_json.side == 1 %} 4
+          {% elif trigger.payload_json.side == 2 %} 5
+          {% elif trigger.payload_json.side == 3 %} 0
+          {% elif trigger.payload_json.side == 4 %} 1
+          {% elif trigger.payload_json.side == 5 %} 2
           {% endif %}
         {% endif %}
   - choose:
@@ -419,15 +413,15 @@ action:
         sequence: !input "cube_slide_any"
       # ---------------------------- Flip 90 to any side ----------------------------
       - conditions:
-          - "{{ flip_degrees == 90 and flip_90 }}"
+          - "{{ command == 'flip90' and flip_90 }}"
         sequence: !input "cube_flip_90"
       # ---------------------------- Flip 180 to any side ----------------------------
       - conditions:
-          - "{{ flip_degrees == 180 and flip_180 }}"
+          - "{{ command == 'flip180' and flip_180 }}"
         sequence: !input "cube_flip_180"
       # ---------------------------- Flip 90 to side 1 ----------------------------
       - conditions:
-          - "{{ flip_degrees == 90 and activated_face == 1 }}"
+          - "{{ command == 'flip90' and activated_face == 1 }}"
         sequence:
           - choose:
               - conditions: "{{ from_face == 2 }}"
@@ -436,11 +430,11 @@ action:
                 sequence: !input "three_to_one"
               - conditions: "{{ from_face == 5 }}"
                 sequence: !input "five_to_one"
-              - conditions: "{{ from_face == 6 }}"
+              - conditions: "{{ from_face == 0 }}"
                 sequence: !input "six_to_one"
       # ---------------------------- Flip 90 to side 2 ----------------------------
       - conditions:
-          - "{{ flip_degrees == 90 and activated_face == 2 }}"
+          - "{{ command == 'flip90' and activated_face == 2 }}"
         sequence:
           - choose:
               - conditions: "{{ from_face == 1 }}"
@@ -449,11 +443,11 @@ action:
                 sequence: !input "three_to_two"
               - conditions: "{{ from_face == 4 }}"
                 sequence: !input "four_to_two"
-              - conditions: "{{ from_face == 6 }}"
+              - conditions: "{{ from_face == 0 }}"
                 sequence: !input "six_to_two"
       # ---------------------------- Flip 90 to side 3 ----------------------------
       - conditions:
-          - "{{ flip_degrees == 90 and activated_face == 3 }}"
+          - "{{ command == 'flip90' and activated_face == 3 }}"
         sequence:
           - choose:
               - conditions: "{{ from_face == 1 }}"
@@ -466,7 +460,7 @@ action:
                 sequence: !input "five_to_three"
       # ---------------------------- Flip 90 to side 4 ----------------------------
       - conditions:
-          - "{{ flip_degrees == 90 and activated_face == 4 }}"
+          - "{{ command == 'flip90' and activated_face == 4 }}"
         sequence:
           - choose:
               - conditions: "{{ from_face == 2 }}"
@@ -475,11 +469,11 @@ action:
                 sequence: !input "three_to_four"
               - conditions: "{{ from_face == 5 }}"
                 sequence: !input "five_to_four"
-              - conditions: "{{ from_face == 6 }}"
+              - conditions: "{{ from_face == 0 }}"
                 sequence: !input "six_to_four"
       # ---------------------------- Flip 90 to side 5 ----------------------------
       - conditions:
-          - "{{ flip_degrees == 90 and activated_face == 5 }}"
+          - "{{ command == 'flip90' and activated_face == 5 }}"
         sequence:
           - choose:
               - conditions: "{{ from_face == 1 }}"
@@ -488,11 +482,11 @@ action:
                 sequence: !input "three_to_five"
               - conditions: "{{ from_face == 4 }}"
                 sequence: !input "four_to_five"
-              - conditions: "{{ from_face == 6 }}"
+              - conditions: "{{ from_face == 0 }}"
                 sequence: !input "six_to_five"
       # ---------------------------- Flip 90 to side 6 ----------------------------
       - conditions:
-          - "{{ flip_degrees == 90 and activated_face == 6 }}"
+          - "{{ command == 'flip90' and activated_face == 0 }}"
         sequence:
           - choose:
               - conditions: "{{ from_face == 1 }}"
@@ -505,7 +499,7 @@ action:
                 sequence: !input "five_to_six"
       # ---------------------------- Flip 180 to side x ----------------------------
       - conditions:
-          - "{{ value == flip180 + activated_face - 1 }}"
+          - "{{ command == 'flip180' }}"
         sequence:
           - choose:
               - conditions: "{{ activated_face == 1 }}"
@@ -518,11 +512,11 @@ action:
                 sequence: !input "one_to_four"
               - conditions: "{{ activated_face == 5 }}"
                 sequence: !input "two_to_five"
-              - conditions: "{{ activated_face == 6 }}"
+              - conditions: "{{ activated_face == 0 }}"
                 sequence: !input "three_to_six"
         # ---------------------------- Knock side x ----------------------------
       - conditions:
-          - "{{ value == knock + activated_face - 1 }}"
+          - "{{ command == 'tap' }}"
         sequence:
           - choose:
               - conditions: "{{ activated_face == 1 }}"
@@ -535,11 +529,11 @@ action:
                 sequence: !input "four_to_four"
               - conditions: "{{ activated_face == 5 }}"
                 sequence: !input "five_to_five"
-              - conditions: "{{ activated_face == 6 }}"
+              - conditions: "{{ activated_face == 0 }}"
                 sequence: !input "six_to_six"
       # ---------------------------- Slide side x ----------------------------
       - conditions:
-          - "{{ value == slide + activated_face - 1 }}"
+          - "{{ command == 'slide' }}"
         sequence:
           - choose:
               - conditions: "{{ activated_face == 1 }}"
@@ -552,5 +546,5 @@ action:
                 sequence: !input "slide_on_four"
               - conditions: "{{ activated_face == 5 }}"
                 sequence: !input "slide_on_five"
-              - conditions: "{{ activated_face == 6 }}"
+              - conditions: "{{ activated_face == 0 }}"
                 sequence: !input "slide_on_six"
